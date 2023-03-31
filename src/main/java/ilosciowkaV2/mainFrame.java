@@ -11,7 +11,7 @@ import javax.swing.table.TableRowSorter;
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
 import javax.swing.JButton;
-import javax.swing.JTextField;
+import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 
 import java.awt.BorderLayout;
@@ -34,7 +34,7 @@ public class mainFrame{
 	private ButtonGroup radioGroup;
 	private JRadioButton inks, toners, mouses, keyboards;
 	private TableRowSorter<TableModel> sorter = null;
-	private JTextField filterField;
+	private JFormattedTextField filterField;
 	private boolean issueVal = false;
 	private JButton showIssued;
 
@@ -70,7 +70,7 @@ public class mainFrame{
 		JLabel filterLabel = new JLabel("Znajdź rekord zawierający:");
 
 		//TextField to wprowadzenia filtru
-		filterField = new JTextField();
+		filterField = new JFormattedTextField();
 			filterField.addKeyListener(filterFieldListener);
 			filterField.setMinimumSize(new Dimension(150,25));
 			filterField.setPreferredSize(new Dimension(150,25));
@@ -193,19 +193,37 @@ public class mainFrame{
 
 		@Override
 		public void keyTyped(KeyEvent e) {
-			keyPressed(e);
+			keyReleased(e);
 		}
 		
 		@Override
-		public void keyPressed(KeyEvent e) {			
-			String filterText = filterField.getText();
-			filterTable(filterText);
+		public void keyPressed(KeyEvent e) {
+			keyReleased(e);
 
 		}
 
 		@Override
 		public void keyReleased(KeyEvent e) {
-			this.keyPressed(e);
+
+			
+			String filterText = filterField.getText();
+			String regex = "";
+
+			System.out.println(filterText);
+
+			for(int i = 0; i < filterText.length(); i++){
+				regex = regex.concat("\\w");
+			}
+
+			System.out.println(regex);
+
+
+			if(filterText.matches(regex))
+				filterTable(filterText);
+			else
+				System.out.println("ripjefpn");
+
+
 		}
 
 	};
