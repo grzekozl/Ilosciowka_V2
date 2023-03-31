@@ -235,7 +235,7 @@ public class DBConn{
 		return res;
 	}
 	
-	//Metoda wybierajaca wszystkiedane konkretnego modelu
+	//Metoda wybierajaca wszystkiedane konkretnego modelu -- dodaj drugametoda dla odpowiedniego koloru dla samych tuszy
 	static public List<LinkedHashMap<String,String>> getDataOf(String thing, String table){
 		List<LinkedHashMap<String,String>> res = null;
 
