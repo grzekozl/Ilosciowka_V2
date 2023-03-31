@@ -190,6 +190,7 @@ public class mainFrame{
 		
 	}
 	
+	//Sluchacz dla pola filtra - Sprwadz czy nie ma niepoprawnych znakow i wykonaj metoda filtrujaca tablice
 	private final KeyListener filterFieldListener = new KeyListener(){
 
 		@Override
@@ -210,14 +211,9 @@ public class mainFrame{
 			String filterText = filterField.getText();
 			String regex = "";
 
-			System.out.println(filterText);
-
 			for(int i = 0; i < filterText.length(); i++){
 				regex = regex.concat("\\w");
 			}
-
-			System.out.println(regex);
-
 
 			if(filterText.matches(regex))
 				filterTable(filterText);
