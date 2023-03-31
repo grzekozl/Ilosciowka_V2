@@ -13,6 +13,7 @@ import javax.swing.ButtonGroup;
 import javax.swing.JButton;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -193,12 +194,12 @@ public class mainFrame{
 
 		@Override
 		public void keyTyped(KeyEvent e) {
-			keyReleased(e);
+			// keyReleased(e);
 		}
 		
 		@Override
 		public void keyPressed(KeyEvent e) {
-			keyReleased(e);
+			// keyReleased(e);
 
 		}
 
@@ -220,9 +221,11 @@ public class mainFrame{
 
 			if(filterText.matches(regex))
 				filterTable(filterText);
-			else
-				System.out.println("ripjefpn");
-
+			else{
+				JOptionPane.showMessageDialog(null, "Używaj tylko liter i cyfr");
+				filterField.setText(filterText.replaceAll("\\W", ""));
+				keyReleased(e);
+			}
 
 		}
 
