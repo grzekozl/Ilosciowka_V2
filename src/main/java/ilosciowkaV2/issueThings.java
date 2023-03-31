@@ -45,6 +45,7 @@ public class issueThings {
 	static public void setItVisible(boolean state) {
 		issueFrame.setVisible(state);
 		issueFrame.setLocationRelativeTo(null);
+		System.out.println(state);
 	}
 	
 	// Metoda aktualizujaca JComboBox z modelami rzeczy i ewentualnie kolorami jezeli tusze zostana wybrane
