@@ -82,11 +82,9 @@ public class DBConn{
 	};
 
 	/*
-	 * Metoda do przetwarzania ResultSet - wniku zapytania - na tablice LinkedHashMap
-	 * HashMap nie sortuje wdlug tego jak sa dodawane do neij elementy 
-	 * LinkedHashMap ma metody i sluchacza od sortowania i podstawowo sortuje welug dodanych elementow
-	 * 
-	 * @return Liste LinkedHashMap / tablice LinkedHashmap
+	  Metoda do przetwarzania ResultSet - wniku zapytania - na tablice LinkedHashMap
+	  HashMap nie sortuje wdlug tego jak sa dodawane do neij elementy 
+	  LinkedHashMap ma metody i sluchacza od sortowania i podstawowo sortuje welug dodanych elementow
 	*/
 	static private List<LinkedHashMap<String, String>> convertRSToList(ResultSet input){
 		List<LinkedHashMap<String, String>> myList = new ArrayList<LinkedHashMap<String, String>>();
@@ -237,6 +235,38 @@ public class DBConn{
 		return res;
 	}
 	
+	//Metoda wybierajaca wszystkiedane konkretnego modelu
+	static public List<LinkedHashMap<String,String>> getDataOf(String thing, String table){
+		List<LinkedHashMap<String,String>> res = null;
+
+		try(Connection conn = DriverManager.getConnection(baza, user, pass)){
+			Statement stat = conn.createStatement();
+
+			String whereString = null;
+
+			switch(thing){
+				case "klawiatury":
+				case "myszki":
+					whereString = "manufacturer";
+					break;
+				case "tusze":
+				case "tonery":
+					whereString = "model";
+					break;
+
+				default:
+					break;
+			}
+
+			ResultSet sqlRes = stat.executeQuery("SELECT " + amounterMap.get(table) + " FROM " + table + " WHERE " + whereString + " LIKE '%" + thing + "%'");
+
+			res = convertRSToList(sqlRes);
+
+		}catch(SQLException exc){error(exc);}
+
+		return res;
+	}
+
 	static public int getIdOf(String thing, String table) {
 		Integer res = null;
 		
