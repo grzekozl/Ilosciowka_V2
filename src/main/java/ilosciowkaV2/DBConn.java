@@ -97,7 +97,6 @@ public class DBConn{
 				LinkedHashMap<String,String> data = new LinkedHashMap<String,String>();
 				for(int j = 1; j <= input.getMetaData().getColumnCount(); j++) {
 					data.put(input.getMetaData().getColumnLabel(j), input.getString(j));
-					System.out.println("Tabela: " + input.getMetaData().getTableName(1) + "\t\tj=" + j + "\t\tcolType=" + input.getMetaData().getColumnType(j) + "\t\tdata=" + input.getString(j));
 				}
 				myList.add(data);
 			}
@@ -256,7 +255,6 @@ public class DBConn{
 			
 			} 
 			String query = "SELECT Id FROM " + table + " WHERE " + columnName + " LIKE '%" + thing + "%';";
-			System.out.println(query);
 			ResultSet sqlRes = stat.executeQuery(query);
 			
 			sqlRes.first();
@@ -285,7 +283,6 @@ public class DBConn{
 			
 			} 
 			String query = "SELECT Id FROM " + table + " WHERE " + columnName + " LIKE '%" + thing + "%' AND color LIKE '%" + color + "%';";
-			System.out.println(query);
 			ResultSet sqlRes = stat.executeQuery(query);
 			
 			sqlRes.first();
@@ -351,11 +348,8 @@ public class DBConn{
 		while(query.indexOf("]") != -1)
 			query = query.replace(query.indexOf("]"), query.indexOf("]")+1, ")");		
 		
-		System.out.println(query);
 		try (Connection Conn = DriverManager.getConnection(baza,user,pass)){
-//			Statement stat = Conn.createStatement();
 			PreparedStatement stat = Conn.prepareStatement(query.toString());
-//			int i = stat.executeUpdate(); 
 			
 			if(stat.executeUpdate() > 0)
 				return true;
@@ -379,12 +373,10 @@ public class DBConn{
 				String[] returnCols = {"amount"};
 			try(Connection Conn = DriverManager.getConnection(baza, user, pass)){
 				Statement stat = Conn.createStatement();
-				int i = stat.executeUpdate(query, returnCols);
+				stat.executeUpdate(query, returnCols);
 				
-				System.out.println("Zwrcono: " + i);
 			}catch (SQLException exc){error(exc);}
-		}else
-			System.out.println("EL PROBLEMO FRIENDO");
+		}
 		return true;
 	}
 }

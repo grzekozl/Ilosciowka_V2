@@ -110,7 +110,6 @@ public class issueThings {
 
 		String room = roomField.isEnabled() ? "pokój " + String.valueOf(roomField.getValue()) : "bolków"; 
 
-		System.out.println(model + " ||| " + table);
 
 		String modelId = null;
 		if(colorChoice.isEnabled())
@@ -126,7 +125,6 @@ public class issueThings {
 			data.put("\"amount\"", String.valueOf(amount));
 			data.put("\"where\"", "'" + room + "'");
 		
-			System.out.println(model);
 			//Wątek który uruchamian zapytania
 		Thread th = new Thread(){
 			public void run(){
