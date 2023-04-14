@@ -24,12 +24,14 @@ public class DBConn{
 
 	static private String baza, user, pass;
 
+	//Mapa z danymi do wybierania danych z nazwami kolumn dla czesci ilosciowki
 	static private HashMap<String, String[]> amounterMap = new HashMap<>();
 		static private String[] tusze = {"model AS 'Model'", "color AS 'Kolor'", "printer AS 'Do Drukarki'", "amount AS 'Ilość'"};
 		static private String[] tonery = {"what_printer AS 'Do Drukarki'", "model AS 'Model'", "amount AS 'Ilość'" };
 		static private String[] klawiatury = {"manufacturer AS 'Producent'", "amount AS 'Ilość'"};
 		static private String[] myszki = {"manufacturer AS 'Producent'", "amount AS 'Ilość'"};
 
+	//Mapa z danymi do wybierania danych z nazwami kolumn dla czesci wydanych rzeczy
 	static private HashMap<String, String[]> issuedMap = new HashMap<>();
 		static private String[] tusze_Wydane = {"tusze.model AS Model", "tusze.color AS Kolor", "wydane_tusze.amount AS Ile", "wydane_tusze.[where] AS Gdzie", "wydane_tusze.[when] AS Kiedy"};
 		static private String[] tonery_Wydane = {"tonery.model AS 'Model'", "wydane_tonery.amount AS 'Ile'", "wydane_tonery.[where] AS 'Gdzie'", "wydane_tonery.[when] AS 'Kiedy'"};
@@ -42,15 +44,13 @@ public class DBConn{
 		amounterMap.put("klawiatury",	myszki);
 		amounterMap.put("myszki",		klawiatury);
 
-		issuedMap.put("tusze", 		tusze_Wydane);
-		issuedMap.put("tonery",		tonery_Wydane);
+		issuedMap.put("tusze", 			tusze_Wydane);
+		issuedMap.put("tonery",			tonery_Wydane);
 		issuedMap.put("myszki", 		myszki_Wydane);
 		issuedMap.put("klawiatury", 	klawiatury_Wydane);
 	}
 
-	static final public boolean ISSUED = true;	// parametr ze chcemy wydobyc wydane
-	static final public boolean NOT_ISSUED = false;// parametr ze nie chcemy wydobwyac wydanych
-
+	//Metoda ustawiajaca dane polaczenia do bazy - z portem
 	static public boolean setConnection(String ip, String port, String nazwaBazy, String uzytkownik, String haslo) {
 
 		baza = "jdbc:sqlserver://" + ip + ":" + port + ";databaseName=" + nazwaBazy + ";characterEncoding=utf8;integratedSecurity=true;";
@@ -61,11 +61,12 @@ public class DBConn{
 		try(Connection Conn = DriverManager.getConnection(baza, uzytkownik, haslo)){
 			return true;
 		}catch(SQLException exc){
-			exc.printStackTrace();
+			error(exc);
 			return false;
 		}
 	};
 
+	//Metoda ustawiajaca dane polaczenia do bazy - bez portu
 	static public boolean setConnection(String ip, String nazwaBazy, String uzytkownik, String haslo) {
 
 		baza = "jdbc:sqlserver://" + ip + ":1433;databaseName=" + nazwaBazy + ";?characterEncoding=utf8";
@@ -76,7 +77,7 @@ public class DBConn{
 		try(Connection Conn = DriverManager.getConnection(baza, uzytkownik, haslo)){
 			return true;
 		}catch(SQLException exc){
-			exc.printStackTrace();
+			error(exc);
 			return false;
 		}
 	};
@@ -99,11 +100,12 @@ public class DBConn{
 				myList.add(data);
 			}
 			
-		} catch (SQLException e) {e.printStackTrace();}
+		} catch (SQLException e) {error(e);}
 	
 		return myList;
 	}
 	
+	//Metoda na wypadek bledu - zapisuje dane do pliku oraz pokazuje okno z komunikatem
 	static public void error(Exception exc) {
 		String os = System.getProperty("os.name");
 		char del = 0;
@@ -133,6 +135,7 @@ public class DBConn{
 		JOptionPane.showMessageDialog(null, "Wystąpil bład. Plik z błędem zapisany został w \n " + filePath, "Error", JOptionPane.INFORMATION_MESSAGE);
 	}
 
+	//Metoda wybierajaca wszystkie dane
 	static public List<LinkedHashMap<String,String>> getAll(String table, boolean areIssued){
 		List<LinkedHashMap<String, String>> res = null;
 		ResultSet sqlRes = null;
@@ -160,27 +163,8 @@ public class DBConn{
 		
 		
 	}
-
-	static public List<LinkedHashMap<String, String>> getSpecified(String[] columns, String table) {
-		List<LinkedHashMap<String, String>> res = null;
-		ResultSet sqlRes = null;
-		
-		try(Connection Conn = DriverManager.getConnection(baza,user,pass)) {
-			Statement stat = Conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
-			ResultSet.CONCUR_READ_ONLY);
-			
-			sqlRes = stat.executeQuery("SELECT " + String.join(",", columns) + " FROM " + table + ";");
-			
-			if(sqlRes.getWarnings() != null) {
-				System.out.println(sqlRes.getWarnings().getMessage());
-				return null;
-			}
-			
-			return convertRSToList(sqlRes);
-		} catch (SQLException e) {error(e);}
-		return res;
-	}
 	
+	//Ta metoda moze byc wystarczajaca gdy where ustawione na null nie bedzie dodawac koncowki
 	static public List<LinkedHashMap<String, String>> getSpecified(String[] columns, String table, String where) {
 		List<LinkedHashMap<String, String>> res = null;
 		ResultSet sqlRes = null;
@@ -188,78 +172,29 @@ public class DBConn{
 		try(Connection Conn = DriverManager.getConnection(baza,user,pass)) {
 			Statement stat = Conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
 					ResultSet.CONCUR_READ_ONLY);
-			
-			sqlRes = stat.executeQuery("SELECT " + String.join(",", columns) + " FROM " + table + " WHERE " + where + ";");
+			String query = "SELECT " + String.join(",", columns) + " FROM " + table + ";";
+			query += (where != null) ? "WHERE " + where + ";":"";
+
+			sqlRes = stat.executeQuery(query);
 			
 			return convertRSToList(sqlRes);
 		} catch (SQLException e) {error(e);}
 		
 		return res;
 	}
-	
-	static public List<LinkedHashMap<String, String>> getSpecified(String column, String table) {
-		List<LinkedHashMap<String, String>> res = null;
-		ResultSet sqlRes = null;
-		
-		try(Connection Conn = DriverManager.getConnection(baza,user,pass)) {
-			Statement stat = Conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,ResultSet.CONCUR_READ_ONLY);
-			
-			sqlRes = stat.executeQuery("SELECT " + column + " FROM " + table + ";");
-			
-			if(sqlRes.getWarnings() != null) {
-				System.out.println(sqlRes.getWarnings().getMessage());
-				throw new SQLException();
-			}
-			
-			return convertRSToList(sqlRes);
 
-		} catch (SQLException e) {error(e);}
-		
-		return res;
-	}
-	
-	static public List<LinkedHashMap<String, String>> getSpecified(String column, String table, String where) {
-
-		List<LinkedHashMap<String, String>> res = null;
-		
-		try(Connection Conn = DriverManager.getConnection(baza,user,pass)) {
-				Statement stat = Conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
-				ResultSet.CONCUR_READ_ONLY);
-				
-				ResultSet sqlRes = stat.executeQuery("SELECT " + column + " FROM " + table + " WHERE " + where + " ;");
-				return convertRSToList(sqlRes);
-
-
-		} catch (SQLException e) {error(e);}
-		
-		return res;
-	}
-	
-	//Metoda wybierajaca wszystkiedane konkretnego modelu -- dodaj drugametoda dla odpowiedniego koloru dla samych tuszy
-	static public List<LinkedHashMap<String,String>> getDataOf(String thing, String table){
+	//Metoda wybierajaca wszystkie dane konkretnego modelu dla toneru, myszki i klawiatury (tusze ze wzgledu na swoja inna budowe w bzie wymagaja innego zapytania - innej metody)
+	static public List<LinkedHashMap<String,String>> getDataOf(int id, String table){
 		List<LinkedHashMap<String,String>> res = null;
 
 		try(Connection conn = DriverManager.getConnection(baza, user, pass)){
 			Statement stat = conn.createStatement();
 
-			String whereString = null;
+			String query = "SELECT * FROM " + table + " WHERE id = " + id;
 
-			switch(thing){
-				case "klawiatury":
-				case "myszki":
-					whereString = "manufacturer";
-					break;
-				case "tusze":
-				case "tonery":
-					whereString = "model";
-					break;
 
-				default:
-					break;
-			}
-
-			ResultSet sqlRes = stat.executeQuery("SELECT " + amounterMap.get(table) + " FROM " + table + " WHERE " + whereString + " LIKE '%" + thing + "%'");
-
+			System.out.println("query of getDataOf:\n" + query);
+			ResultSet sqlRes = stat.executeQuery(query);
 			res = convertRSToList(sqlRes);
 
 		}catch(SQLException exc){error(exc);}
@@ -267,35 +202,8 @@ public class DBConn{
 		return res;
 	}
 
-	static public int getIdOf(String thing, String table) {
-		Integer res = null;
-		
-		try(Connection Conn = DriverManager.getConnection(baza,user,pass)){
-			Statement stat = Conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-			String columnName = null;
-			switch(table) {
-				case "tusze":
-				case "tonery":
-					columnName = "model";
-					break;
-				case "klawiatury":
-				case "myszki":
-					columnName = "manufacturer";
-					break;
-			
-			} 
-			String query = "SELECT Id FROM " + table + " WHERE " + columnName + " LIKE '%" + thing + "%';";
-			ResultSet sqlRes = stat.executeQuery(query);
-			
-			sqlRes.first();
-			res = sqlRes.getInt(1);
-			
-		} catch(SQLException e) {error(e);}
-		
-		return res;
-	}	
-	
-	static public int getIdOf(String thing, String table, String color) {
+	//Metoda wybierajaca ID pdoanego elementu
+	static public int getIdOf(String model, String table, String color) {
 		int res = 0;
 		
 		try(Connection Conn = DriverManager.getConnection(baza,user,pass)){
@@ -310,9 +218,12 @@ public class DBConn{
 				case "myszki":
 					columnName = "manufacturer";
 					break;
-			
 			} 
-			String query = "SELECT Id FROM " + table + " WHERE " + columnName + " LIKE '%" + thing + "%' AND color LIKE '%" + color + "%';";
+
+			String query = "SELECT Id FROM " + table + " WHERE " + columnName + " LIKE '%" + model + "%';";
+			query = (color!=null) ? query.subSequence(0, query.length()-1) + " AND color LIKE '%" + color + "%';":"";
+
+			System.out.println("query for getIdOf:\n" + query);
 			ResultSet sqlRes = stat.executeQuery(query);
 			
 			sqlRes.first();
@@ -323,6 +234,7 @@ public class DBConn{
 		return res;
 	}
 
+	//Metoda tworzaca JTable z listy wynikow z SQL
 	static public final JTable makeJTable(List<LinkedHashMap<String, String>> input) {
 		JTable res = null;
 		String[] labels = new String[input.get(0).keySet().size()];
@@ -368,6 +280,7 @@ public class DBConn{
 		return res;
 	}
 	
+	//Metoda wstawiajaca dane do bazy
 	static public final boolean sendInsert(String table, LinkedHashMap<String,String> data) {
 		StringBuilder query = new StringBuilder("INSERT INTO dbo." + table + "(" + String.join(",", data.keySet().toArray(new String[0])) + ")" 
 				+ " VALUES " + data.values().toString() + ";");
@@ -386,10 +299,11 @@ public class DBConn{
 			else
 				return false;
 			
-		} catch (Exception e) {e.printStackTrace();}
+		} catch (Exception e) {error(e);}
 		return true;
 	}
 	
+	//Metoda aktualizujaca dane w bazie
 	static public final boolean sendUpdate(String table, String amount, String ofWhat){
 		String modOrManu = "";
 

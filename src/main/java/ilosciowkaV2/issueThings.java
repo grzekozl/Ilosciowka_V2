@@ -95,7 +95,8 @@ public class issueThings {
 	private void issueMethod(){
 		//Ustawianie eykiety na wiadomosc ze uzytkownik ma czekac
 		queryStatus.setText("<html><font color = 'yellow'>Przetwarzanie...</font></html>");
-		//Mapa z poprawnymi nazwami olumn w bazie
+
+		//Mapa z poprawnymi nazwami kolumn w bazie
 		LinkedHashMap<String,String> dbNames = new LinkedHashMap<String,String>();
 			dbNames.put("Tusz", "tusze");
 			dbNames.put("Toner", "tonery");
@@ -106,39 +107,40 @@ public class issueThings {
 		String table = dbNames.get(tablesChoice.getSelectedItem().toString());
 		String model = modelChoice.getSelectedItem().toString();
 		String amount = String.valueOf(amountField.getValue());
-		String color = (String) colorChoice.getSelectedItem();
-
+		String color = colorChoice.isEnabled() ? (String)colorChoice.getSelectedItem() : null;
 		String room = roomField.isEnabled() ? "pokój " + String.valueOf(roomField.getValue()) : "bolków"; 
-
-
-		String modelId = null;
-		if(colorChoice.isEnabled())
-			modelId = String.valueOf(DBConn.getIdOf(model, table, color));
-		else
-			modelId = String.valueOf(DBConn.getIdOf(model, table));
-		
+		int modelId = DBConn.getIdOf(model, table, color);
 		String issueTable = "wydane_" + table;
 			
 		
 		LinkedHashMap<String,String> data = new LinkedHashMap<String,String>();
-			data.put("\"model\"", modelId);
+			data.put("\"model\"", String.valueOf(modelId));
 			data.put("\"amount\"", String.valueOf(amount));
 			data.put("\"where\"", "'" + room + "'");
 		
 			//Wątek który uruchamian zapytania
 		Thread th = new Thread(){
 			public void run(){
-				try{
-					if(DBConn.sendUpdate(table, amount, model))
+				//Sprawdzanie czy ilosc an stanie w bazie pozwala na wydanie zadanej ilosci
+				DBConn.getDataOf(modelId, table).forEach(data -> {
+					if(Integer.parseInt(data.get("amount")) < Integer.parseInt(amount)){
+						
+					}else{
+						try{
+							//Wprowadzanie danych - ma byc wykonywane gdy ilosc elementu jest rowna lub wieksza ilosci wydawanej
+							DBConn.sendUpdate(table, amount, model);
+		
+							if(DBConn.sendInsert(issueTable, data))
+								queryStatus.setText("<html><font color='green'>Wprowadzono dane</font></html>");
+							else
+								queryStatus.setText("<html><font color='red'>Uno problemo szefuńciu</font></html>");
+		
+							Thread.sleep(1000);
+							queryStatus.setText(" ");
+						}catch(InterruptedException exc){DBConn.error(exc);}
 
-					if(DBConn.sendInsert(issueTable, data))
-						queryStatus.setText("<html><font color='green'>Wprowadzono dane</font></html>");
-					else
-						queryStatus.setText("<html><font color='red'>Uno problemo szefuńciu</font></html>");
-
-					Thread.sleep(1000);
-					queryStatus.setText(" ");
-				}catch(InterruptedException exc){exc.printStackTrace();}
+					}
+				});
 			}
 		};
 		th.start();		
@@ -157,7 +159,7 @@ public class issueThings {
 			//Tablice do tworzenia ComboBoxow - maja zawierac modele/producentow 
 			String[] tablesName = {"Tusz", "Toner", "Klawiatura", "Myszka"};
 			
-			String[] tusze = groupArray(ListToArray(DBConn.getSpecified("model", "tusze"))); 
+			String[] tusze = groupArray(ListToArray(DBConn.getSpecified("model", "tusze", null))); 
 			String[] tonery = ListToArray(DBConn.getSpecified("model", "tonery"));
 			String[] klawiatury = ListToArray(DBConn.getSpecified("manufacturer", "klawiatury"));
 			String[] myszki = ListToArray(DBConn.getSpecified("manufacturer", "myszki"));
