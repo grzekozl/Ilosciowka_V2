@@ -280,17 +280,16 @@ public class mainFrame{
 		}};
 		
 	//Akcja przycisku do pokazania wydanych rzeczy
-		private final ActionListener showIssuedAction = new ActionListener(){
-			public void actionPerformed(ActionEvent ae) {
-				issueVal = !issueVal;
-				setTheShittyTable(theTable.getName());
-				filterField.setText(null);
-				filterFieldListener.keyPressed(null);
+	private final ActionListener showIssuedAction = new ActionListener(){
+		public void actionPerformed(ActionEvent ae) {
+			issueVal = !issueVal;
+			setTheShittyTable(theTable.getName());
+			filterField.setText(null);
+			filterFieldListener.keyPressed(null);
 
-				if(issueVal)
-					showIssued.setText("Pokaż stan");
-				else
-					showIssued.setText("Pokaż wydane");
-			}};
-	
+			if(issueVal)
+				showIssued.setText("Pokaż stan");
+			else
+				showIssued.setText("Pokaż wydane");
+		}};
 }

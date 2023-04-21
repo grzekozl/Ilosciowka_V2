@@ -222,9 +222,8 @@ public class DBConn{
 			} 
 
 			String query = "SELECT Id FROM " + table + " WHERE " + columnName + " LIKE '%" + model + "%';";
-			query += (color!=null) ? query.subSequence(0, query.length()-1) + " AND color LIKE '%" + color + "%';":"";
+			query = (color!=null) ? query.subSequence(0, query.length()-1) + " AND color LIKE '%" + color + "%';":query;
 
-			System.out.println(query);
 			ResultSet sqlRes = stat.executeQuery(query);
 			
 			sqlRes.first();
