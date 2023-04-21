@@ -3,6 +3,7 @@ package ilosciowkaV2;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -115,24 +116,20 @@ public class DBConn{
 		else if(os.contains("Linux"))
 			del = '/';
 
-		SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-HH:mm");
+		SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-HH-mm-ss");
 		String filePath = String.join(Character.toString(del), System.getProperty("user.home"),"ilosciowkaV2", "blad" + sdf.format(new Date()) + ".txt");
-		File excFile = new File(filePath);
-		FileWriter FW = null;
-		
 		try {
 			//Zapisywani bledu do pliku
+			File excFile = new File(filePath);
+			PrintWriter excPS = new PrintWriter(new FileWriter(excFile), true);
 			excFile.getParentFile().mkdirs();
 			excFile.createNewFile();
-			FW = new FileWriter(excFile);
-			FW.write(exc.getMessage());
-			exc.printStackTrace();
-			FW.flush();
-			FW.close();
+			exc.printStackTrace(excPS);
+			
 
 		} catch (IOException e) {JOptionPane.showMessageDialog(null, e.toString());}
 		
-		JOptionPane.showMessageDialog(null, "Wystąpil bład. Plik z błędem zapisany został w \n " + filePath, "Error", JOptionPane.INFORMATION_MESSAGE);
+		JOptionPane.showMessageDialog(null, "<html> Wystąpil bład. Plik z błędem zapisany został w <br> " + filePath + " </html> ", "Error", JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	//Metoda wybierajaca wszystkie dane
@@ -172,8 +169,8 @@ public class DBConn{
 		try(Connection Conn = DriverManager.getConnection(baza,user,pass)) {
 			Statement stat = Conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
 					ResultSet.CONCUR_READ_ONLY);
-			String query = "SELECT " + String.join(",", columns) + " FROM " + table + ";";
-			query += (where != null) ? "WHERE " + where + ";":"";
+			String query = "SELECT " + String.join(",", columns) + " FROM " + table;
+			query = (where != null) ? query + " WHERE " + where + ";" : query + ";";
 
 			sqlRes = stat.executeQuery(query);
 			
@@ -181,6 +178,12 @@ public class DBConn{
 		} catch (SQLException e) {error(e);}
 		
 		return res;
+	}
+
+	//Wybieranie konkretnych danych - metoda dla pzrypadku gdy chcemy wyciagnac tylko jeden element (nie mozna utworzyc tablicy w argumencie)
+	static public List<LinkedHashMap<String, String>> getSpecified(String column, String table, String where) {
+		String[] arr = {column};
+		return getSpecified(arr, table, where);
 	}
 
 	//Metoda wybierajaca wszystkie dane konkretnego modelu dla toneru, myszki i klawiatury (tusze ze wzgledu na swoja inna budowe w bzie wymagaja innego zapytania - innej metody)
@@ -192,8 +195,6 @@ public class DBConn{
 
 			String query = "SELECT * FROM " + table + " WHERE id = " + id;
 
-
-			System.out.println("query of getDataOf:\n" + query);
 			ResultSet sqlRes = stat.executeQuery(query);
 			res = convertRSToList(sqlRes);
 
@@ -221,9 +222,9 @@ public class DBConn{
 			} 
 
 			String query = "SELECT Id FROM " + table + " WHERE " + columnName + " LIKE '%" + model + "%';";
-			query = (color!=null) ? query.subSequence(0, query.length()-1) + " AND color LIKE '%" + color + "%';":"";
+			query += (color!=null) ? query.subSequence(0, query.length()-1) + " AND color LIKE '%" + color + "%';":"";
 
-			System.out.println("query for getIdOf:\n" + query);
+			System.out.println(query);
 			ResultSet sqlRes = stat.executeQuery(query);
 			
 			sqlRes.first();
@@ -239,7 +240,6 @@ public class DBConn{
 		JTable res = null;
 		String[] labels = new String[input.get(0).keySet().size()];
 		String[][] data = null;
-
 
 		// Ustawianie nazw kolumn w tablicy
 		for(int i = 0; i < labels.length; i++) {
@@ -283,8 +283,8 @@ public class DBConn{
 	//Metoda wstawiajaca dane do bazy
 	static public final boolean sendInsert(String table, LinkedHashMap<String,String> data) {
 		StringBuilder query = new StringBuilder("INSERT INTO dbo." + table + "(" + String.join(",", data.keySet().toArray(new String[0])) + ")" 
-				+ " VALUES " + data.values().toString() + ";");
-		
+				+ " VALUES (" + String.join(",", data.values().toArray(new String[0])) + ");");
+
 		while(query.indexOf("[") != -1)
 			query = query.replace(query.indexOf("["), query.indexOf("[")+1, "(");
 		
@@ -312,9 +312,9 @@ public class DBConn{
 		else if (table.equalsIgnoreCase("myszki") || table.equalsIgnoreCase("klawiatury"))
 			modOrManu = "manufacturer";
 
-			if(!modOrManu.isEmpty()){
-				String query = "UPDATE dbo." + table + " SET amount = amount - " + amount + " WHERE " + modOrManu + " LIKE '%" + ofWhat + "%'";
-				String[] returnCols = {"amount"};
+		if(!modOrManu.isEmpty()){
+			String query = "UPDATE dbo." + table + " SET amount = amount - " + amount + " WHERE " + modOrManu + " LIKE '%" + ofWhat + "%'";
+			String[] returnCols = {"amount"};
 			try(Connection Conn = DriverManager.getConnection(baza, user, pass)){
 				Statement stat = Conn.createStatement();
 				stat.executeUpdate(query, returnCols);

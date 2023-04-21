@@ -99,7 +99,6 @@ public class Demo{
 							if(line.contains(word))
 								res.put(word, line.split(":")[1].replaceAll(" ", ""));
 					}
-					System.out.println(res);
 				}catch(IOException exc){exc.printStackTrace();}
 			}
 

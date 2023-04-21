@@ -27,6 +27,7 @@ import javax.swing.JComboBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
@@ -114,44 +115,58 @@ public class issueThings {
 			
 		
 		LinkedHashMap<String,String> data = new LinkedHashMap<String,String>();
-			data.put("\"model\"", String.valueOf(modelId));
-			data.put("\"amount\"", String.valueOf(amount));
+			data.put("\"model\"", ("'"+String.valueOf(modelId))+"'");
+			data.put("\"amount\"", ("'"+String.valueOf(amount))+"'");
 			data.put("\"where\"", "'" + room + "'");
 		
 			//Wątek który uruchamian zapytania
 		Thread th = new Thread(){
 			public void run(){
 				//Sprawdzanie czy ilosc an stanie w bazie pozwala na wydanie zadanej ilosci
-				DBConn.getDataOf(modelId, table).forEach(data -> {
-					if(Integer.parseInt(data.get("amount")) < Integer.parseInt(amount)){
-						
-					}else{
-						try{
-							//Wprowadzanie danych - ma byc wykonywane gdy ilosc elementu jest rowna lub wieksza ilosci wydawanej
-							DBConn.sendUpdate(table, amount, model);
-		
-							if(DBConn.sendInsert(issueTable, data))
-								queryStatus.setText("<html><font color='green'>Wprowadzono dane</font></html>");
-							else
-								queryStatus.setText("<html><font color='red'>Uno problemo szefuńciu</font></html>");
-		
-							Thread.sleep(1000);
-							queryStatus.setText(" ");
-						}catch(InterruptedException exc){DBConn.error(exc);}
+				DBConn.getDataOf(modelId, table).forEach(sqlData -> {
 
-					}
+					//Jezeli ilosc w bazie jest mniejsza od wydawanej
+					try{
+						if(Integer.parseInt(sqlData.get("amount")) < Integer.parseInt(amount)){
+							int differance = Integer.parseInt(amount) - Integer.parseInt(sqlData.get("amount"));
+							int confirm = JOptionPane.showConfirmDialog(null, "Zabraknie "+ differance + ". Czy chcesz wydać mimo to?", "Brakująca ilość", JOptionPane.OK_CANCEL_OPTION, 0 , null);
+								/* 0 - OK
+								* 2 - Cancel*/
+
+							//Warunek jezeli uzytkownik zgodzil sie na wydanie resztki sprzetu
+							if(confirm == 0){
+								//Wprowadzanie danych - ma byc wykonywane gdy ilosc elementu jest rowna lub wieksza ilosci wydawanej
+								DBConn.sendUpdate(table, sqlData.get("amount"), model); // Zmniejszanie ilosci do 0 na bazie
+				
+								if(DBConn.sendInsert(issueTable, data)) // Wstawianie danych do tabeli wydanych
+									queryStatus.setText("<html><font color='green'>Wprowadzono dane</font></html>");
+								else
+									queryStatus.setText("<html><font color='red'>Uno problemo szefuńciu</font></html>");
+								Thread.sleep(3000);
+								queryStatus.setText(" ");
+							}else if(confirm == 2){
+								queryStatus.setText("<html><font color=yellow>Nie wydano, potrzeba wydania byla "+ amount +", zabrakło "+ differance +"</font></html>");
+								Thread.sleep(3000);
+								queryStatus.setText(" ");
+							}
+						}else{
+							DBConn.sendUpdate(table, amount, model); // Zmniejszanie ilosci do 0 na bazie
+							
+							if(DBConn.sendInsert(issueTable, data)) // Wstawianie danych do tabeli wydanych
+							queryStatus.setText("<html><font color='green'>Wprowadzono dane</font></html>");
+							else
+							queryStatus.setText("<html><font color='red'>Uno problemo szefuńciu</font></html>");
+							
+							Thread.sleep(3000);
+							queryStatus.setText(" ");
+								
+						}
+					}catch(InterruptedException exc){DBConn.error(exc);}
 				});
 			}
 		};
 		th.start();		
 	}
-	
-	
-	
-		
-	
-	
-	
 	
 	//Konstruktor klasy
 	issueThings(){
@@ -160,9 +175,9 @@ public class issueThings {
 			String[] tablesName = {"Tusz", "Toner", "Klawiatura", "Myszka"};
 			
 			String[] tusze = groupArray(ListToArray(DBConn.getSpecified("model", "tusze", null))); 
-			String[] tonery = ListToArray(DBConn.getSpecified("model", "tonery"));
-			String[] klawiatury = ListToArray(DBConn.getSpecified("manufacturer", "klawiatury"));
-			String[] myszki = ListToArray(DBConn.getSpecified("manufacturer", "myszki"));
+			String[] tonery = ListToArray(DBConn.getSpecified("model", "tonery", null));
+			String[] klawiatury = ListToArray(DBConn.getSpecified("manufacturer", "klawiatury", null));
+			String[] myszki = ListToArray(DBConn.getSpecified("manufacturer", "myszki", null));
 			
 		
 			// Tworzenie okna
@@ -185,9 +200,6 @@ public class issueThings {
 				tablesHash.put("Klawiatura", klawiatury);
 				tablesHash.put("Myszka", myszki);
 		
-			//Tablica z kolorami do jego wyboru
-			// String[] colors = {"Czarny duży","Czarny mały","Żółty","Cyjan","Magenta"};
-			
 		//ComboBox z wyborem przedmiotu - toner/tusz...
 		tablesChoice = new JComboBox<String>(tablesName);
 			tablesChoice.setPreferredSize(new Dimension(100,25));
