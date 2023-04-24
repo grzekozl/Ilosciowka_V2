@@ -238,7 +238,7 @@ public class DBConn{
 	static public final JTable makeJTable(List<LinkedHashMap<String, String>> input) {
 		JTable res = null;
 		String[] labels = new String[input.get(0).keySet().size()];
-		String[][] data = null;
+		Object[][] data = null;
 
 		// Ustawianie nazw kolumn w tablicy
 		for(int i = 0; i < labels.length; i++) {
@@ -251,14 +251,16 @@ public class DBConn{
 		//Ile mamy kolumn
 		final int cols = input.get(0).keySet().size();
 
-		data = new String[rows][cols];
+		data = new Object[rows][cols];
 		
 		//Magia do tworzenia dwu wymiarowej tablicy aby dodac dane do JTable
 		int i = 0;
 		for(HashMap<String, String> hm : input) {
-			for(int j = 0; j < cols;j++) {
+			for(int j = 0; j < cols;j++) 
+				if(labels[j].equals("Ile") || labels[j].equals("Ilość"))
+					data[i][j] = Integer.valueOf(hm.get(labels[j]));
+				else
 				data[i][j] = hm.get(labels[j]);
-			}
 			i++;
 		}
 		
@@ -270,6 +272,9 @@ public class DBConn{
 			public boolean isCellEditable(int row, int column){  
 		          return false;  
 		      }
+
+			
+			
 		};
 		
 		//Ustawienia JTable przed jego zwroceniem
@@ -281,6 +286,7 @@ public class DBConn{
 	
 	//Metoda wstawiajaca dane do bazy
 	static public final boolean sendInsert(String table, LinkedHashMap<String,String> data) {
+		boolean returnVal = false;
 		StringBuilder query = new StringBuilder("INSERT INTO dbo." + table + "(" + String.join(",", data.keySet().toArray(new String[0])) + ")" 
 				+ " VALUES (" + String.join(",", data.values().toArray(new String[0])) + ");");
 
@@ -294,12 +300,12 @@ public class DBConn{
 			PreparedStatement stat = Conn.prepareStatement(query.toString());
 			
 			if(stat.executeUpdate() > 0)
-				return true;
+				returnVal = true;
 			else
-				return false;
+				returnVal = false;
 			
 		} catch (Exception e) {error(e);}
-		return true;
+		return returnVal;
 	}
 	
 	//Metoda aktualizujaca dane w bazie

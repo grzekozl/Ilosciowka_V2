@@ -113,7 +113,7 @@ public class issueThings {
 		int modelId = DBConn.getIdOf(model, table, color);
 		String issueTable = "wydane_" + table;
 			
-		
+		//HashMapa z canymi do zapytania SQL
 		LinkedHashMap<String,String> data = new LinkedHashMap<String,String>();
 			data.put("\"model\"", ("'"+String.valueOf(modelId))+"'");
 			data.put("\"amount\"", ("'"+String.valueOf(amount))+"'");
