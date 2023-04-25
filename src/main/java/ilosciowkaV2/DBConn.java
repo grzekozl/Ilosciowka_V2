@@ -18,6 +18,7 @@ import java.util.List;
 
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
+import javax.swing.table.DefaultTableModel;
 
 import java.sql.ResultSet;
 
@@ -264,17 +265,29 @@ public class DBConn{
 			i++;
 		}
 		
+		//Nadpisywanie metody getColumnClass w model utablicy aby ta zwracala poprawne typy danych w kolumnie
+		DefaultTableModel resModel = new DefaultTableModel(data, labels){
+			@Override
+			public Class<?> getColumnClass(int col) {
+			
+				Class retVal = Object.class;
+
+				if(getRowCount() > 0)
+					retVal =  getValueAt(0, col).getClass();
+					
+				return retVal;
+			}
+		};
+
 		//Tworzenie JTable z wylaczona opcja edytowania - nadpisanie metody isCellEditable unimozliwia wprowadzanie zmian, ale pozwala na zaznaczenie wiersza
-		res = new JTable(data, labels) {
+		res = new JTable(resModel) {
 			 	
 			private static final long serialVersionUID = -6294684695385804289L;
 
+			@Override
 			public boolean isCellEditable(int row, int column){  
 		          return false;  
-		      }
-
-			
-			
+		      }			
 		};
 		
 		//Ustawienia JTable przed jego zwroceniem
