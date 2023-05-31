@@ -270,7 +270,7 @@ public class DBConn{
 			@Override
 			public Class<?> getColumnClass(int col) {
 			
-				Class retVal = Object.class;
+				Class<?> retVal = Object.class;
 
 				if(getRowCount() > 0)
 					retVal =  getValueAt(0, col).getClass();
@@ -292,7 +292,6 @@ public class DBConn{
 		
 		//Ustawienia JTable przed jego zwroceniem
 		res.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
-		// res.setAutoCreateRowSorter(true);
 		
 		return res;
 	}

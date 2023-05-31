@@ -37,7 +37,7 @@ public class mainFrame{
 	private TableRowSorter<TableModel> sorter = null;
 	private JFormattedTextField filterField;
 	private boolean issueVal = false;
-	private JButton showIssued;
+	private JButton showIssued, issueButt, refreshButt, addThing;
 
 	//Metoda ustawiajaca filtr na tabele
 	private void filterTable(String filter){
@@ -151,17 +151,24 @@ public class mainFrame{
 			keyboards.addActionListener(keyboardsAction);
 			
 			
-			JButton refreshButt = new JButton("Odswiez tabele");
-			refreshButt.setMinimumSize(buttsDim);
-			refreshButt.setPreferredSize(buttsDim);
-			JButton issueButt = new JButton("Wydaj");
-			issueButt.setMinimumSize(buttsDim);
+			refreshButt = new JButton("Odswiez tabele");
+				refreshButt.setMinimumSize(buttsDim);
+				refreshButt.setPreferredSize(buttsDim);
+
+			issueButt = new JButton("Wydaj");
+				issueButt.setMinimumSize(buttsDim);
 				issueButt.setPreferredSize(buttsDim);
+
 			showIssued = new JButton("Pokaż wydane");
 				showIssued.setMinimumSize(buttsDim);
 				showIssued.setPreferredSize(buttsDim);
 				showIssued.addActionListener(showIssuedAction);
-				
+			
+			addThing = new JButton("Dodaj element");
+				addThing.setMinimumSize(buttsDim);
+				addThing.setPreferredSize(buttsDim);
+				addThing.addActionListener(addThingAction);
+
 			gbc.gridwidth = 2;
 
 			gbc.gridx = 0;
@@ -239,24 +246,28 @@ public class mainFrame{
 
 	//Akcja tusze
 	private final ActionListener inksAction = new ActionListener(){
+		@Override
 		public void actionPerformed(ActionEvent ae) {
 			standarizeRadioListener(((JRadioButton)ae.getSource()).getText());
 	}};
 	
 	//Akcja tonery
 	private final ActionListener tonersAction = new ActionListener(){
+		@Override
 		public void actionPerformed(ActionEvent ae) {
 			standarizeRadioListener(((JRadioButton)ae.getSource()).getText());
 	}};
 	
 	//Akcja myszki
 	private final ActionListener mousesAction = new ActionListener(){
+		@Override
 		public void actionPerformed(ActionEvent ae) {
 			standarizeRadioListener(((JRadioButton)ae.getSource()).getText());
 	}};
 	
 	//Akcja klawiatury
 	private final ActionListener keyboardsAction = new ActionListener(){
+		@Override
 		public void actionPerformed(ActionEvent ae) {
 			standarizeRadioListener(((JRadioButton)ae.getSource()).getText());
 	}};
@@ -267,6 +278,7 @@ public class mainFrame{
 	
 	//Akcja przycisku odswiezenia
 	private final ActionListener refreshButtAction = new ActionListener(){
+		@Override
 		public void actionPerformed(ActionEvent ae) {
 			setTheShittyTable(theTable.getName());
 			refreshTable();
@@ -275,12 +287,14 @@ public class mainFrame{
 		
 	//Akcja przycisku do aktualizowania bazy
 	private final ActionListener issueButtAction = new ActionListener(){
+		@Override
 		public void actionPerformed(ActionEvent ae) {
 			issueThings.setItVisible(true);
 		}};
 		
 	//Akcja przycisku do pokazania wydanych rzeczy
 	private final ActionListener showIssuedAction = new ActionListener(){
+		@Override
 		public void actionPerformed(ActionEvent ae) {
 			issueVal = !issueVal;
 			setTheShittyTable(theTable.getName());
@@ -291,5 +305,11 @@ public class mainFrame{
 				showIssued.setText("Pokaż stan");
 			else
 				showIssued.setText("Pokaż wydane");
+		}};
+
+	private final ActionListener addThingAction = new ActionListener(){
+		@Override
+		public void actionPerformed(ActionEvent ae){
+			addThings.setItVisible(true);
 		}};
 }
