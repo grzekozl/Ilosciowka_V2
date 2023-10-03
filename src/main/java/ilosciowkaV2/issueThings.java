@@ -12,7 +12,6 @@ import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
 import java.awt.Insets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -109,7 +108,8 @@ public class issueThings {
 		String model = modelChoice.getSelectedItem().toString();
 		String amount = String.valueOf(amountField.getValue());
 		String color = colorChoice.isEnabled() ? (String)colorChoice.getSelectedItem() : null;
-		String room = roomField.isEnabled() ? "pokój " + String.valueOf(roomField.getValue()) : "bolków"; 
+		String room = roomField.isEnabled() ? "pokój " + roomField.getValue() : "bolków";
+		System.out.println("roomField.getValue() = " + roomField.getValue());
 		int modelId = DBConn.getIdOf(model, table, color);
 		String issueTable = "wydane_" + table;
 			
@@ -119,7 +119,7 @@ public class issueThings {
 			data.put("\"amount\"", ("'"+String.valueOf(amount))+"'");
 			data.put("\"where\"", "'" + room + "'");
 		
-			//Wątek który uruchamian zapytania
+			//Wątek który uruchamia zapytania
 		Thread th = new Thread(){
 			public void run(){
 				//Sprawdzanie czy ilosc an stanie w bazie pozwala na wydanie zadanej ilosci
@@ -130,8 +130,10 @@ public class issueThings {
 						if(Integer.parseInt(sqlData.get("amount")) < Integer.parseInt(amount)){
 							int differance = Integer.parseInt(amount) - Integer.parseInt(sqlData.get("amount"));
 							int confirm = JOptionPane.showConfirmDialog(null, "Zabraknie "+ differance + ". Czy chcesz wydać mimo to?", "Brakująca ilość", JOptionPane.OK_CANCEL_OPTION, 0 , null);
-								/* 0 - OK
-								* 2 - Cancel*/
+								/*
+								* 0 - OK
+								* 2 - Cancel
+								*/
 
 							//Warunek jezeli uzytkownik zgodzil sie na wydanie resztki sprzetu
 							if(confirm == 0){
@@ -179,7 +181,7 @@ public class issueThings {
 			String[] klawiatury = ListToArray(DBConn.getSpecified("manufacturer", "klawiatury", null));
 			String[] myszki = ListToArray(DBConn.getSpecified("manufacturer", "myszki", null));
 			
-		
+
 			// Tworzenie okna
 			issueFrame = new JFrame("Wydaj przedmiot");
 			issueFrame.setResizable(true);
@@ -219,10 +221,10 @@ public class issueThings {
 			colorChoice.setPreferredSize(new Dimension(100,25));
 			
 		//Wspólny panel dla wyboru modeli/prodeucenta oraz koloru
-		JPanel modelColorPanel = new JPanel(new GridLayout(2,1));
-			modelColorPanel.add(modelChoice);
-			modelColorPanel.add(colorChoice);
-			modelColorPanel.setOpaque(false);
+		// JPanel modelColorPanel = new JPanel(new GridLayout(2,1));
+		// 	modelColorPanel.add(modelChoice);
+		// 	modelColorPanel.add(colorChoice);
+		// 	modelColorPanel.setOpaque(false);
 		//Panel do wprowadzania ilosci
 		JPanel amountPanel = new JPanel(new GridBagLayout());
 	
@@ -252,14 +254,17 @@ public class issueThings {
 				roomLabel.setPreferredSize(new Dimension(45,25));
 
 			//Pole
-			roomField = new JFormattedTextField(numForm);
-				roomField.setValue(1);
+
+			// roomField = new JFormattedTextField(numForm);
+			roomField = new JFormattedTextField();
+				roomField.setValue("1");
 				roomField.setPreferredSize(new Dimension(45,25));
 
 			//Dodawanie etykiety i pola do panelu
 			roomPanel.add(roomLabel);
 			roomPanel.add(roomField);
 			roomPanel.setOpaque(false);
+			
 			//CheckBox dla bolkowa
 			JCheckBox bolkowRoomCBox = new JCheckBox("Bolków");
 				bolkowRoomCBox.addItemListener(bolkowRoomCBoxListener);

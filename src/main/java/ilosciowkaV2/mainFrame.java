@@ -132,7 +132,7 @@ public class mainFrame{
 			//Ustawianie zawartosci tabeli na tusze
 			setTheShittyTable("tusze");
 
-			gbc.gridwidth = 6;
+			gbc.gridwidth = 8;
 			gbc.gridx = 0;
 			gbc.gridy = 0;
 				topMenu.add(radioButtPanel, gbc);
@@ -151,13 +151,15 @@ public class mainFrame{
 			keyboards.addActionListener(keyboardsAction);
 			
 			
-			refreshButt = new JButton("Odswiez tabele");
+			refreshButt = new JButton("Odświez tabele");
 				refreshButt.setMinimumSize(buttsDim);
 				refreshButt.setPreferredSize(buttsDim);
+				refreshButt.addActionListener(refreshButtAction);
 
 			issueButt = new JButton("Wydaj");
 				issueButt.setMinimumSize(buttsDim);
 				issueButt.setPreferredSize(buttsDim);
+				issueButt.addActionListener(issueButtAction);
 
 			showIssued = new JButton("Pokaż wydane");
 				showIssued.setMinimumSize(buttsDim);
@@ -182,11 +184,11 @@ public class mainFrame{
 			gbc.gridx = 4;
 			gbc.gridy = 1;
 				topMenu.add(showIssued, gbc);
-				
-			refreshButt.addActionListener(refreshButtAction);
-			issueButt.addActionListener(issueButtAction);
-		
 
+			gbc.gridx = 6;
+			gbc.gridy = 1;
+				topMenu.add(addThing, gbc);
+				
 			
 		//Dodawanie paneli do okna
 		mainFrame.add(topMenu, BorderLayout.NORTH);

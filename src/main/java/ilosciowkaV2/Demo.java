@@ -51,8 +51,16 @@ public class Demo{
 				new issueThings();
 			}
 		};
-		saveCreds();
 		issueThings.start();
+
+		Thread addThings = new Thread(){
+			public void run(){
+				new addThings();
+			}
+		};
+		addThings.start();
+
+		saveCreds();
 		loginFrame.dispose();
 	}
 	
