@@ -150,7 +150,6 @@ public class DBConn{
 			
 
 			if(sqlRes.getWarnings() != null || sqlRes == null) {
-				System.out.println(sqlRes.getWarnings().getMessage());
 				throw new SQLException();
 			}
 			
@@ -185,6 +184,32 @@ public class DBConn{
 	static public List<LinkedHashMap<String, String>> getSpecified(String column, String table, String where) {
 		String[] arr = {column};
 		return getSpecified(arr, table, where);
+	}
+
+	// Powyzsze metody z grupowaniem
+	static public List<LinkedHashMap<String, String>> getSpecified(String[] columns, String table, String where, String groupBy) {
+		List<LinkedHashMap<String, String>> res = null;
+		ResultSet sqlRes = null;
+		
+		try(Connection Conn = DriverManager.getConnection(baza,user,pass)) {
+			Statement stat = Conn.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE,
+					ResultSet.CONCUR_READ_ONLY);
+			String query = "SELECT " + String.join(",", columns) + " FROM " + table + " ";
+			query = (where != null) ? query + " WHERE " + where + ";" : (groupBy == null) ? query + ";": query;
+			query = (groupBy != null) ? query + "GROUP BY " + groupBy : query + ";";
+
+			sqlRes = stat.executeQuery(query);
+			
+			return convertRSToList(sqlRes);
+		} catch (SQLException e) {error(e);}
+		
+		return res;
+	}
+
+	//Wybieranie konkretnych danych - metoda dla pzrypadku gdy chcemy wyciagnac tylko jeden element (nie mozna utworzyc tablicy w argumencie)
+	static public List<LinkedHashMap<String, String>> getSpecified(String column, String table, String where, String groupBy) {
+		String[] arr = {column};
+		return getSpecified(arr, table, where, groupBy);
 	}
 
 	//Metoda wybierajaca wszystkie dane konkretnego modelu dla toneru, myszki i klawiatury (tusze ze wzgledu na swoja inna budowe w bzie wymagaja innego zapytania - innej metody)
@@ -322,22 +347,21 @@ public class DBConn{
 	
 	//Metoda aktualizujaca dane w bazie
 	static public final boolean sendUpdate(String table, String amount, String ofWhat){
-		String modOrManu = "";
-
-		if(table.equalsIgnoreCase("tusze") || table.equalsIgnoreCase("tonery"))
-			modOrManu = "model";
-		else if (table.equalsIgnoreCase("myszki") || table.equalsIgnoreCase("klawiatury"))
-			modOrManu = "manufacturer";
+		String modOrManu = 
+			table.equalsIgnoreCase("tusze") || table.equalsIgnoreCase("tonery") ? "model" :
+			table.equalsIgnoreCase("myszki") || table.equalsIgnoreCase("klawiatury") ? "manufacturer" : null;
 
 		if(!modOrManu.isEmpty()){
-			String query = "UPDATE dbo." + table + " SET amount = amount - " + amount + " WHERE " + modOrManu + " LIKE '%" + ofWhat + "%'";
+			String query = "UPDATE dbo." + table + " SET amount = amount - " + amount + " WHERE " + modOrManu + " LIKE '%" + ofWhat + "%';";
 			String[] returnCols = {"amount"};
 			try(Connection Conn = DriverManager.getConnection(baza, user, pass)){
 				Statement stat = Conn.createStatement();
 				stat.executeUpdate(query, returnCols);
 				
 			}catch (SQLException exc){error(exc);}
+
+			return true;
 		}
-		return true;
+		return false;
 	}
 }

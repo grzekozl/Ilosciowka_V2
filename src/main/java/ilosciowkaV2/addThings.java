@@ -5,7 +5,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -15,9 +14,12 @@ import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 
-import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
+import javax.swing.DefaultComboBoxModel;
 import javax.swing.SwingUtilities;
 import javax.swing.text.NumberFormatter;
 import javax.swing.JComboBox;
@@ -25,10 +27,26 @@ import javax.swing.JFormattedTextField;
 
 public class addThings {
     private static JFrame frame;
-    private JPanel amountPanel, mainPanel = new JPanel(), radioPanel = new JPanel(), tuszeCase = new JPanel(), restCase = new JPanel();
+    private JPanel amountPanel, mainPanel = new JPanel(), radioPanel = new JPanel(), tuszeCase = new JPanel();
     private JRadioButton newRadioButton, editRadioButton;
     private ButtonGroup radioButtonGroup = new ButtonGroup();
-    private JComboBox<String> whichTable,  itemModels;
+    private JComboBox<String> whichTable, itemModels;
+	
+    //Metoda z magią do przekształcania listy z hashmapami na tablice String
+	private String[] ListToArray(List<LinkedHashMap<String, String>> list) {
+		List<String> processList = new ArrayList<String>();
+		String[] res = null;
+
+		for(LinkedHashMap<String,String> lhm : list) {
+			lhm.forEach((key, value) ->{
+				processList.add(value);
+			});
+		}
+		
+		res = processList.toArray(new String[0]);
+		
+		return res;
+	}
 
     public static void setItVisible(boolean state){
         frame.setVisible(state);
@@ -101,7 +119,19 @@ public class addThings {
             amountPanel.setVisible(false);
 
         //ComboBox z modelami/producentami produktow do edycji
-        itemModels = new JComboBox<String>();
+		String specifiedColumn =
+		    (whichTable.getSelectedItem().toString().equals("Tusze") || whichTable.getSelectedItem().toString().equals("Tonery")) ? "model" :
+            ((whichTable.getSelectedItem().toString().equals("Myszki") || whichTable.getSelectedItem().toString().equals("Klawiatury")) ? "manufacturer" : null);
+		
+		String specTable = 
+            (whichTable.getSelectedItem().toString().equals("Tusze")) ? "tusze" :
+            (whichTable.getSelectedItem().toString().equals("Tonery")) ? "tonery" :
+            (whichTable.getSelectedItem().toString().equals("Myszki")) ? "myszki":
+            (whichTable.getSelectedItem().toString().equals("Klawiatury")) ? "klawiatury" : null;
+
+		String[] itemModelsData = ListToArray(DBConn.getSpecified(specifiedColumn, specTable, null, specifiedColumn));
+        
+        itemModels = new JComboBox<String>(itemModelsData);
 
 		//Pole kolorow tuszy i ilosci reszty
         JFormattedTextField C, M, Y, B, BXL, amount;
@@ -124,14 +154,15 @@ public class addThings {
 		tuszeCase.add(Y);
 		tuszeCase.add(B);
 		tuszeCase.add(BXL);
-		        
+		tuszeCase.setVisible(true);
+
         //padding pomiedzy elementami dla GridBagLayout
-        // gbc.insets = new Insets(4, 4, 4, 4);
+         gbc.insets = new Insets(4, 4, 4, 4);
 
 		//Dodawanie elementow do okna
 
 		gbc.ipadx = 4;
-		gbc.ipady = 6;
+		gbc.ipady = 5;
 
 		gbc.weightx = 4;
 		gbc.weighty = 3;
@@ -145,17 +176,21 @@ public class addThings {
         gbc.gridy = 1;
         	mainPanel.add(whichTable, gbc); //ComboBox z wyborem tablicy
 
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+            mainPanel.add(itemModels, gbc);
+
 		gbc.anchor = GridBagConstraints.NORTH;
         gbc.gridwidth = 4;
 		gbc.gridheight = 3;
         gbc.gridx = 1;
-        gbc.gridy = 2;
+        gbc.gridy = 3;
+
             mainPanel.add(amountPanel, gbc); //Pole ilosci
 			mainPanel.add(tuszeCase, gbc);
             
         //Odswiezanie okna po dodaniu elementow
         SwingUtilities.updateComponentTreeUI(frame);
-		System.out.println(whichTable.getSize().height);
     }
 
 
@@ -168,17 +203,47 @@ public class addThings {
     };
 
     private final ItemListener tableChoiceListener = new ItemListener() {
-
+		
         @Override
         public void itemStateChanged(ItemEvent e) {
-            System.out.println(e.getItem());
+
+            String specifiedColumn =
+                (whichTable.getSelectedItem().toString().equals("Tusze") || whichTable.getSelectedItem().toString().equals("Tonery")) ? "model" :
+                (whichTable.getSelectedItem().toString().equals("Myszki") || whichTable.getSelectedItem().toString().equals("Klawiatury")) ? "manufacturer" : null;
+		
+            String specTable = 
+                (whichTable.getSelectedItem().toString().equals("Tusze")) ? "tusze" :
+                (whichTable.getSelectedItem().toString().equals("Tonery")) ? "tonery" :
+                (whichTable.getSelectedItem().toString().equals("Myszki")) ? "myszki":
+                (whichTable.getSelectedItem().toString().equals("Klawiatury")) ? "klawiatury" : null;
+
+		    String[] itemModelsData = ListToArray(DBConn.getSpecified(specifiedColumn, specTable, null, specifiedColumn));
+        
+            DefaultComboBoxModel<String> model = (DefaultComboBoxModel<String>)itemModels.getModel();
+            model.removeAllElements();
+            for(String val : itemModelsData)
+                model.addElement(val);
+
+            itemModels.setModel(model);
+            SwingUtilities.updateComponentTreeUI(frame);
+
+			GridBagConstraints gbc = new GridBagConstraints();
+				gbc.ipadx = 4;
+				gbc.ipady = 5;
+				gbc.anchor = GridBagConstraints.NORTH;
+        		gbc.gridwidth = 4;
+				gbc.gridheight = 3;
+        		gbc.gridx = 1;
+        		gbc.gridy = 2;
+
             if(!e.getItem().toString().equals("Tusze")){
-                System.out.println("O KURWA TO NIE TUSZE");
-                amountPanel.setVisible(true);
+				tuszeCase.setVisible(false);
+				amountPanel.setVisible(true);
             }else{
-                System.out.println("łuhuu.... tusze.....");
-                amountPanel.setVisible(false);
+				tuszeCase.setVisible(true);
+				amountPanel.setVisible(false);
             }
+			SwingUtilities.updateComponentTreeUI(mainPanel);
         }
     };
 }

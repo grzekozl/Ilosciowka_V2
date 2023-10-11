@@ -41,34 +41,36 @@ public class issueThings {
 	private JLabel queryStatus;
 	private JPanel mainPanel;
 	
+	
 	//Metoda ustawiajaca czy okno maF byc widoczne czy nie
 	static public void setItVisible(boolean state) {
 		issueFrame.setVisible(state);
 		issueFrame.setLocationRelativeTo(null);
 	}
 	
-	// Metoda aktualizujaca JComboBox z modelami rzeczy i ewentualnie kolorami jezeli tusze zostana wybrane
-	private void setModelChoice(String table) {
+	// // Metoda aktualizujaca JComboBox z modelami rzeczy i ewentualnie kolorami jezeli tusze zostana wybrane
+	// private void setModelChoice(String table) {
 		
-		DefaultComboBoxModel<String> comboBoxNew = (DefaultComboBoxModel<String>) modelChoice.getModel();
-		comboBoxNew.removeAllElements();
+	// 	DefaultComboBoxModel<String> comboBoxNew = (DefaultComboBoxModel<String>) modelChoice.getModel();
+	// 	comboBoxNew.removeAllElements();
 		
-		for(String val : tablesHash.get(table))
-			comboBoxNew.addElement(val);
+	// 	for(String val : tablesHash.get(table))
+	// 		comboBoxNew.addElement(val);
 
-		if(table.equals("Tusz")){
-			colorChoice.setEnabled(true);
-			issueFrame.revalidate();
-		}
-		else
-			colorChoice.setEnabled(false);
+	// 	if(table.equals("Tusz")){
+	// 		colorChoice.setEnabled(true);
+	// 		issueFrame.revalidate();
+	// 	}
+	// 	else
+	// 		colorChoice.setEnabled(false);
 		
-	}
+	// }
 	
 	//Metoda z magią do przekształcania listy z hashmapami na tablice String
 	private String[] ListToArray(List<LinkedHashMap<String, String>> list) {
 		List<String> processList = new ArrayList<String>();
 		String[] res = null;
+
 		for(LinkedHashMap<String,String> lhm : list) {
 			lhm.forEach((key, value) ->{
 				processList.add(value);
@@ -109,7 +111,6 @@ public class issueThings {
 		String amount = String.valueOf(amountField.getValue());
 		String color = colorChoice.isEnabled() ? (String)colorChoice.getSelectedItem() : null;
 		String room = roomField.isEnabled() ? "pokój " + roomField.getValue() : "bolków";
-		System.out.println("roomField.getValue() = " + roomField.getValue());
 		int modelId = DBConn.getIdOf(model, table, color);
 		String issueTable = "wydane_" + table;
 			
@@ -330,10 +331,31 @@ public class issueThings {
 	private final ItemListener tabelsChoiceListener = new ItemListener() {
 		@Override
 		public void itemStateChanged(ItemEvent e) {
-			@SuppressWarnings("unchecked")
-			String choice = (String) ((JComboBox<String>)e.getSource()).getSelectedItem();
 			
-			setModelChoice(choice);
+			if(!e.getItem().toString().equals("Tusz"))
+				colorChoice.setEnabled(false);
+			else
+				colorChoice.setEnabled(true);
+
+
+			String table = 
+				(e.getItem().toString().equals("Tusz")) ? "tusze" :
+				(e.getItem().toString().equals("Toner")) ? "tonery" :
+				(e.getItem().toString().equals("Klawiatura")) ? "klawiatury" :
+				(e.getItem().toString().equals("Myszka")) ? "myszki" : null ;
+
+			String group = 
+				(e.getItem().toString().equals("Tusz") || e.getItem().toString().equals("Toner")) ? "model" :
+				(e.getItem().toString().equals("Klawiatura") || e.getItem().toString().equals("Myszka")) ? "manufacturer" : null ;
+
+			String[] newData = ListToArray(DBConn.getSpecified(group, table, null, group));
+			DefaultComboBoxModel<String> defModelChoiceMod = (DefaultComboBoxModel<String>)modelChoice.getModel();
+			defModelChoiceMod.removeAllElements();
+
+			for(String val : newData){
+				defModelChoiceMod.addElement(val);
+			}
+
 		}};
 		
 	//Sluchasz dla wyboru modelu/producenta. Gdy wybierany jest tusz, trzeba ustawic odpowiednie kolory aby moc pozniej wstawic odpowiednie dane
@@ -352,7 +374,7 @@ public class issueThings {
 						cbm.addElement(value);
 					});
 				}
-				issueFrame.revalidate();
+				SwingUtilities.updateComponentTreeUI(issueFrame);
 				
 			}
 		}
