@@ -112,6 +112,7 @@ public class DBConn{
 		String os = System.getProperty("os.name");
 		char del = 0;
 		
+		
 		if(os.contains("Windows")) 
 			del = '\\';
 		else if(os.contains("Linux"))
@@ -122,15 +123,13 @@ public class DBConn{
 		try {
 			//Zapisywani bledu do pliku
 			File excFile = new File(filePath);
-			PrintWriter excPS = new PrintWriter(new FileWriter(excFile), true);
 			excFile.getParentFile().mkdirs();
 			excFile.createNewFile();
+			PrintWriter excPS = new PrintWriter(new FileWriter(excFile), true);
 			exc.printStackTrace(excPS);
-			
-
 		} catch (IOException e) {JOptionPane.showMessageDialog(null, e.toString());}
 		
-		JOptionPane.showMessageDialog(null, "<html> Wystąpil bład. Plik z błędem zapisany został w <br> " + filePath + " </html> ", "Error", JOptionPane.INFORMATION_MESSAGE);
+		JOptionPane.showMessageDialog(null, "<html> Wystąpil bład. Plik z błędem zapisany został w: <br> " + filePath + " </html> ", "Error", JOptionPane.INFORMATION_MESSAGE);
 	}
 
 	//Metoda wybierajaca wszystkie dane
@@ -144,7 +143,7 @@ public class DBConn{
 			
 			sqlRes = areIssued ? 
 				stat.executeQuery("SELECT " + String.join(",", issuedMap.get(table)) + " FROM wydane_" + table +
-				" JOIN " + table + " ON (wydane_"+table+".model = " + table + ".Id) ORDER BY wydane_"+table+".[when] DESC;")
+				" JOIN " + table + " ON (wydane_" + table + ".model = " + table + ".Id) ORDER BY wydane_"+table+".[when] DESC;")
 				:
 				stat.executeQuery("SELECT " + String.join(",", amounterMap.get(table)) + " FROM " + table + " ORDER BY "+ table +".amount ASC;" );
 			
@@ -161,7 +160,7 @@ public class DBConn{
 		
 	}
 	
-	//Ta metoda moze byc wystarczajaca gdy where ustawione na null nie bedzie dodawac koncowki
+	//Ta metoda moze byc wystarczajaca gdy where ustawione na null nie bedzie dodawac średnika
 	static public List<LinkedHashMap<String, String>> getSpecified(String[] columns, String table, String where) {
 		List<LinkedHashMap<String, String>> res = null;
 		ResultSet sqlRes = null;
@@ -171,6 +170,8 @@ public class DBConn{
 					ResultSet.CONCUR_READ_ONLY);
 			String query = "SELECT " + String.join(",", columns) + " FROM " + table;
 			query = (where != null) ? query + " WHERE " + where + ";" : query + ";";
+
+			System.out.println(query);
 
 			sqlRes = stat.executeQuery(query);
 			
@@ -197,6 +198,8 @@ public class DBConn{
 			String query = "SELECT " + String.join(",", columns) + " FROM " + table + " ";
 			query = (where != null) ? query + " WHERE " + where + ";" : (groupBy == null) ? query + ";": query;
 			query = (groupBy != null) ? query + "GROUP BY " + groupBy : query + ";";
+
+			System.out.println(query);
 
 			sqlRes = stat.executeQuery(query);
 			
